@@ -1,0 +1,29 @@
+// this file sample generate from CLI
+// node scripts/cli product --api
+
+const request = require('supertest');
+const { BASE_URL } = require('@config/config');
+const { prepareRequest, handleResponse } = require('@config/helper');
+
+const url = '/products';
+
+async function sendRequest({ method, reqHeader = {}, reqBody = {}, params = '', debug = false }) {
+  const headers = prepareRequest({ reqHeader, debug });
+  const path = `${url}${params}`;
+  const apiRequest = request(BASE_URL)[method](path).set(headers);
+
+  // Send body only for methods that support it
+  if (['post', 'put', 'patch', 'delete'].includes(method)) {
+    apiRequest.send(reqBody);
+  }
+
+  const response = await apiRequest;
+  return handleResponse(response, debug);
+}
+
+const products = (args) => sendRequest({ ...args, method: 'get' });
+const addProduct = (args) => sendRequest({ ...args, method: 'post' });
+const updateProduct = (args) => sendRequest({ ...args, method: 'put' });
+const deleteProduct = (args) => sendRequest({ ...args, method: 'delete' });
+
+module.exports = { products, addProduct, updateProduct, deleteProduct };

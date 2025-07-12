@@ -1,0 +1,59 @@
+const request = require('supertest');
+let { BASE_URL } = require('@config/config');
+const { prepareRequest, handleResponse } = require('@config/helper');
+
+const url = '/__VAR0__s';
+// GET
+async function __VAR0__s({
+  reqHeader = {},
+  reqBody = {},
+  params = '',
+  debug = false,
+}) {
+  const headers = prepareRequest({ reqHeader, debug });
+  const response = await request(BASE_URL).get(`${url}${params}`).set(headers);
+  return handleResponse(response, debug);
+}
+
+// POST
+async function add__VAR1__({
+  reqHeader = {},
+  reqBody = {},
+  params = '',
+  debug = false,
+}) {
+  const headers = prepareRequest({ reqHeader, debug });
+  const response = await request(BASE_URL).post(url).set(headers).send(reqBody);
+  return handleResponse(response, debug);
+}
+
+// PUT
+async function update__VAR1__({
+  reqHeader = {},
+  reqBody = {},
+  params = '',
+  debug = false,
+}) {
+  const headers = prepareRequest({ reqHeader, debug });
+  const response = await request(BASE_URL)
+    .put(`${url}${params}`)
+    .set(headers)
+    .send(reqBody);
+  return handleResponse(response, debug);
+}
+
+// DELETE
+async function delete__VAR1__({
+  reqHeader = {},
+  reqBody = {},
+  params = '',
+  debug = false,
+}) {
+  const headers = prepareRequest({ reqHeader, debug });
+  const response = await request(BASE_URL)
+    .delete(`${url}${params}`)
+    .set(headers)
+    .send(reqBody);
+  return handleResponse(response, debug);
+}
+module.exports = { __VAR0__s, add__VAR1__, update__VAR1__, delete__VAR1__ };

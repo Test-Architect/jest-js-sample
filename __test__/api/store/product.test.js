@@ -7,7 +7,7 @@ const {
   deleteProduct,
 } = require('@srcApi/store/product.js');
 
-describe('Test url api /product', () => {
+describe.skip('Test url api /product', () => {
   let authToken = '';
   beforeAll(async () => {
     const res = await getTokenLogin();

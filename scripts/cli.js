@@ -3,41 +3,33 @@ const fs = require('fs-extra');
 const path = require('path');
 const { program } = require('commander');
 
-// function generate variabel
+// Case converter
+const toPascalCase = (str) =>
+  str.replace(/(^\w|\/\w)/g, (match) => match.replace('/', '').toUpperCase());
+const toPlural = (str) => (str.endsWith('s') ? str : `${str}s`).toLowerCase();
+
+// Generate variables: __VAR0__, __VAR1__, __VAR2__
 const generateVariables = (name) => {
-  const vars = [
-    { __VAR0__: name },
-    { __VAR1__: name[0].toUpperCase() + name.slice(1) },
-    { __VAR2__: name },
-  ];
-
-  if (name.includes('/')) {
-    const holderData = name.split('/').at(-1);
-    const folderPath = name.split('/').slice(0, -1).join('/');
-
-    vars[0].__VAR0__ = holderData;
-    vars[1].__VAR1__ = holderData[0].toUpperCase() + holderData.slice(1);
-    vars[2].__VAR2__ = name.toLowerCase();
-  }
-
-  return Object.assign({}, ...vars);
+  const base = name.includes('/') ? name.split('/').at(-1) : name;
+  return {
+    __VAR0__: toPlural(base), // e.g. 'products'
+    __VAR1__: toPascalCase(base), // e.g. 'Product'
+    __VAR2__: name.toLowerCase(), // e.g. 'user/data'
+  };
 };
 
-// function replace template
-const replaceTemplate = (template, variables) => {
-  return Object.keys(variables).reduce((result, key) => {
-    const regex = new RegExp(key, 'g');
-    return result.replace(regex, variables[key]);
-  }, template);
-};
+// Replace all variables in template
+const replaceTemplate = (template, variables) =>
+  Object.entries(variables).reduce(
+    (result, [key, value]) => result.replace(new RegExp(key, 'g'), value),
+    template
+  );
 
-// main function generate file
+// Generate file
 const generateFile = async (templatePath, outputPath, variables, force) => {
   try {
     const fileExists = await fs.pathExists(outputPath);
-    if (fileExists && !force) {
-      throw new Error(`File already exists: ${outputPath}`);
-    }
+    if (fileExists && !force) throw new Error(`File exists: ${outputPath}`);
 
     const template = await fs.readFile(templatePath, 'utf8');
     const content = replaceTemplate(template, variables);
@@ -51,45 +43,51 @@ const generateFile = async (templatePath, outputPath, variables, force) => {
   }
 };
 
+// CLI
 program
   .name('api-generator')
-  .description('Generate API endpoints and tests with automatic variables')
-  .argument('<name>', 'Endpoint name (e.g. "user" or "user/data/test")')
-  .option('--api', 'Generate API file')
+  .description('Generate API helper and test templates with variables')
+  .argument('<name>', 'Endpoint name (e.g. "user" or "user/data")')
+  .option('--api', 'Generate API file using optimized template')
+  .option('--api-simple', 'Generate API file using simple template')
   .option('--test', 'Generate test file')
-  .option('-f, --force', 'Force overwrite existing files')
+  .option('-f, --force', 'Force overwrite if file exists')
   .action(async (name, options) => {
-    const { api, test } = options;
-
-    // Generate variabel
+    const { api, apiSimple, test, force } = options;
     const variables = generateVariables(name);
+    const templatesDir = path.join(__dirname, 'templates');
+
+    const tasks = [];
+
+    if (api || apiSimple) {
+      const templateFile = api
+        ? 'api.txt' // optimized
+        : 'api-simple.txt'; // legacy
+
+      tasks.push(
+        generateFile(
+          path.join(templatesDir, templateFile),
+          path.join(__dirname, '../src/api-helper', `${name}.js`),
+          variables,
+          force
+        )
+      );
+    }
+
+    if (test) {
+      tasks.push(
+        generateFile(
+          path.join(templatesDir, 'test.txt'),
+          path.join(__dirname, '../__test__/api', `${name}.test.js`),
+          variables,
+          force
+        )
+      );
+    }
 
     try {
-      const templatesDir = path.join(__dirname, 'templates');
-      const tasks = [];
-
-      if (api) {
-        tasks.push(
-          generateFile(
-            path.join(templatesDir, 'api.txt'),
-            path.join(__dirname, '../src/api-helper', `${name}.js`),
-            variables
-          )
-        );
-      }
-
-      if (test) {
-        tasks.push(
-          generateFile(
-            path.join(templatesDir, 'test.txt'),
-            path.join(__dirname, '../__test__/api', `${name}.test.js`),
-            variables
-          )
-        );
-      }
-
       await Promise.all(tasks);
-    } catch (error) {
+    } catch {
       process.exit(1);
     }
   });

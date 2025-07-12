@@ -44,6 +44,7 @@ node scripts/cli <file-name or api-name> --test --api
 
 - `--test`: Generate a sample testing file (placed under `__test__/`)
 - `--api`: Generate an API helper function file (placed under `src/api-helper/`)
+- `--force | -f`: Force overwrite if file exists (please be careful!)
 
 Example:
 
@@ -80,8 +81,8 @@ pnpm -v
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/fredysiswanto/template-api-testing-use-jest.git
-cd template-api-testing-use-jest
+git clone https://github.com/Test-Architect/jest-js-sample.git
+cd jest-js-sample
 ```
 
 ### Install Dependencies

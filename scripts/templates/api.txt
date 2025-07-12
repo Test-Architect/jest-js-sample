@@ -1,59 +1,49 @@
 const request = require('supertest');
-let { BASE_URL } = require('@config/config');
+const { BASE_URL } = require('@config/config');
 const { prepareRequest, handleResponse } = require('@config/helper');
 
 const url = '/__VAR0__s';
-// GET
-async function __VAR0__s({
+
+async function sendRequest({
+  method,
   reqHeader = {},
   reqBody = {},
   params = '',
   debug = false,
 }) {
+  const supportedMethods = ['get', 'post', 'put', 'delete'];
+  if (!supportedMethods.includes(method)) {
+    throw new Error(`Unsupported method: ${method}. Supported methods are: ${supportedMethods.join(', ')}`);
+  }
+
   const headers = prepareRequest({ reqHeader, debug });
-  const response = await request(BASE_URL).get(`${url}${params}`).set(headers);
+  const fullUrl = `${url}${params}`;
+  const apiRequest = request(BASE_URL)[method](fullUrl).set(headers);
+
+  // Send body only for these methods
+  if (['post', 'put', 'delete'].includes(method)) {
+    apiRequest.send(reqBody);
+  }
+
+  const response = await apiRequest;
   return handleResponse(response, debug);
 }
+
+// GET
+const __VAR0__s = (args) => sendRequest({ ...args, method: 'get' });
 
 // POST
-async function add__VAR1__({
-  reqHeader = {},
-  reqBody = {},
-  params = '',
-  debug = false,
-}) {
-  const headers = prepareRequest({ reqHeader, debug });
-  const response = await request(BASE_URL).post(url).set(headers).send(reqBody);
-  return handleResponse(response, debug);
-}
+const add__VAR1__ = (args) => sendRequest({ ...args, method: 'post' });
 
 // PUT
-async function update__VAR1__({
-  reqHeader = {},
-  reqBody = {},
-  params = '',
-  debug = false,
-}) {
-  const headers = prepareRequest({ reqHeader, debug });
-  const response = await request(BASE_URL)
-    .put(`${url}${params}`)
-    .set(headers)
-    .send(reqBody);
-  return handleResponse(response, debug);
-}
+const update__VAR1__ = (args) => sendRequest({ ...args, method: 'put' });
 
 // DELETE
-async function delete__VAR1__({
-  reqHeader = {},
-  reqBody = {},
-  params = '',
-  debug = false,
-}) {
-  const headers = prepareRequest({ reqHeader, debug });
-  const response = await request(BASE_URL)
-    .delete(`${url}${params}`)
-    .set(headers)
-    .send(reqBody);
-  return handleResponse(response, debug);
-}
-module.exports = { __VAR0__s, add__VAR1__, update__VAR1__, delete__VAR1__ };
+const delete__VAR1__ = (args) => sendRequest({ ...args, method: 'delete' });
+
+module.exports = {
+  __VAR0__s,
+  add__VAR1__,
+  update__VAR1__,
+  delete__VAR1__,
+};

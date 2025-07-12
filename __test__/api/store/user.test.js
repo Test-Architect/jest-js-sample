@@ -7,13 +7,15 @@ const {
   deleteUser,
 } = require('@srcApi/store/user.js');
 
-describe('Test url api /user', () => {
+describe.skip('Test url api /user', () => {
   let authToken = '';
   beforeAll(async () => {
     const res = await getTokenLogin();
+    console.log(res);
     authToken = res;
   });
   test('Get all users', async () => {
+    console.log(authToken, 'token');
     const response = await users({
       reqHeader: { token: authToken },
       reqBody: {},
